@@ -9,7 +9,7 @@ class Silhouette:
             none
         """
 
-    def score(self, X: np.ndarray, y: np.ndarray) -> np.ndarray:
+    def score(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         """
         calculates the silhouette score for each of the observations
 
@@ -24,3 +24,22 @@ class Silhouette:
             np.ndarray
                 a 1D array with the silhouette scores for each of the observations in `X`
         """
+
+        # Check if X is in the right format
+        try:
+            x.ndim == 2
+        except TypeError:
+            print('Incorrect number of dimensions:' + X.ndim)
+
+        # Check if Y is in the right format
+        try:
+            y.ndim == 1
+        except TypeError:
+            print('Incorrect number of dimensions:' + y.ndim)
+
+
+
+
+
+
+
