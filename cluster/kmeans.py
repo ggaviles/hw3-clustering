@@ -76,21 +76,16 @@ class KMeans:
 
         self._generate_k_centroids(mat)
 
-        curr_error = self._determine_error(mat)
-
-
-        #max_iter_counter = 1
+        error_diff = self._determine_error(mat)
 
         # max_iter - 1 because already went through one iteration
         for i in range(self.max_iter-1):
-            while error
+            while error_diff > self.tol:
                 self._update_centroids(mat)
-
-
-
-
-
-            max_iter_counter += 1
+                curr_error = self._determine_error(mat)
+                error_diff = curr_error - prev_error
+                error_diff = np.abs(error_diff)
+                prev_error = curr_error
 
 
     def predict(self, mat: np.ndarray) -> np.ndarray:
@@ -137,8 +132,6 @@ class KMeans:
             error_array = self._determine_error(mat)
 
             #
-
-            while error > self.tol:
 
 
 
