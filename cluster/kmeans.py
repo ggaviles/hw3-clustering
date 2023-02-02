@@ -154,17 +154,22 @@ class KMeans:
         dist_squared = np.array([min([np.linalg.norm(m-c)**2 for c in centroids]) for m in mat])
         self.dist_squared = dist_squared
 
-    def _choose_next_center(self, mat: np.ndarray):
+    def _choose_next_centroid(self, mat: np.ndarray):
         self.probs = self.dist_squared / self.dist_squared.sum()
         self.cumulative_probs = self.probs.cumsum()
         r = np.random.uniform(low=0.0, high=1.0)
         index = np.where(self.cumulative_probs >= r)[0][0]
         return mat[index]
+
     def generate_k_centroids(self, mat: np.ndarray):
         while len(self.centroids) < self.k:
             self._distance_from_centroids(mat)
-            self.centroids.append(self._choose_next_center(mat))
+            self.centroids.append(self._choose_next_centroid(mat))
         self.centroids = np.array(self.centroids)
+    def _determine_error(self, mat: np.ndarray):
+        centroids = self.get_centroids()
+        sum_of_squares_error = np.array([np.square([np.sum((m-c)**2) for c in centroids]) for m in mat])
+        return sum_of_squares_error
 
 
     # need to
