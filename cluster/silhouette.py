@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.spatial.distance import cdist
 
+import cluster
+
 
 class Silhouette:
     def __init__(self):
@@ -36,6 +38,8 @@ class Silhouette:
             y.ndim == 1
         except TypeError:
             print('Incorrect number of dimensions:' + y.ndim)
+
+
 
 
 

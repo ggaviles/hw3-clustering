@@ -72,39 +72,29 @@ class KMeans:
             mat: np.ndarray
                 A 2D matrix where the rows are observations and columns are features
         """
-        # Initialize an empty set of centroids to keep track of centroid number
-        #centroids = set()
+        self._init_centroids(mat)
 
-        # Initialize an array of centroids with dimensions k x m
-        col_num = len(mat[0])
-        centroid_array = np.array(self.k, col_num)
+        self.classifications = {}
 
-        # Generate initial centroid array
-        init_centroid_array = self._generate_init_centroid(mat)
+        max_iter_counter = 0
 
-        # Add initial centroid array to set of centroids
-        #centroids.add(init_centroid_array)
+        while max_iter_counter < self.max_iter:
 
-        # Add initial centroid array to array of centroids
-        np.append(centroid_array, init_centroid_array)
+            while len(self.centroids) < self.k:
+                self._distance_from_centroids(mat)
+                self.centroids.append(self._choose_next_center(mat))
+
+            for i in range(self.k):
+                self.classifications[i] = []
+
+            for features in mat:
 
 
-        # Generate k number of centroids
-        while len(centroid_array) < self.k:
 
-            # Calculate distance from centroid to rest of points
-            dist_centroid = self._calculate_dist_centroid(mat, init_centroid_array)
 
-            # Generate a new random centroid chosen from the remaining data points with
-            # probability proportional to its squared distance from the point's closest existing cluster center.
-            new_centroid_array = self._generate_random_centroid(mat, dist_centroid)
 
-            #centroids.add(new_centroid_array)
+            max_iter_counter += 1
 
-            # Append new centroid array to centroid array
-            np.append(centroid_array, new_centroid_array)
-
-        self.centroids = centroid_array
 
     def predict(self, mat: np.ndarray) -> np.ndarray:
         """
@@ -127,6 +117,10 @@ class KMeans:
         except TypeError:
             print('Incorrect number of dimensions:' + mat.ndim)
 
+        distances = [np.linalg.norm(mat - self.centroids[centroid]) for centroid in self.centroids]
+        classification = distances.index(min(distances))
+        return classification
+
     def get_error(self) -> float:
         """
         Returns the final squared-mean error of the fit model. You can either do this by storing the
@@ -136,6 +130,8 @@ class KMeans:
             float
                 the squared-mean error of the fit model
         """
+
+
 
     def get_centroids(self) -> np.ndarray:
         """
@@ -147,47 +143,28 @@ class KMeans:
         """
         return self.centroids
 
+    def _generate_init_centroid(self, mat: np.ndarray):
+        self.centroids = []
+        initial_index = np.random.choice(range(mat.shape[0]), )
+        self.centroids.append(mat[initial_index, :].tolist())
 
-    def _generate_init_centroid(self, mat: np.ndarray) -> np.ndarray:
-        # Generate random x coordinate for initial centroid within range of data points
-        random_centroid_x = np.random.uniform(low=np.min(mat[:, 0]), high=np.max(mat[:, 0]))
+    def _distance_from_centroids(self, mat: np.ndarray):
+        centroids = self.centroids
+        dist = cdist(mat, np.array(self.centroids))
+        dist_squared = np.array([min([np.linalg.norm(m-c)**2 for c in centroids]) for m in mat])
+        self.dist_squared = dist_squared
 
-        # Generate random y coordinate for initial centroid within range of data points
-        random_centroid_y = np.random.uniform(low=np.min(mat[:, 1]), high=np.max(mat[:, 1]))
-
-        # Create a 2D array with centroid x, y values
-        random_centroid_arr = np.array([random_centroid_x, random_centroid_y])
-
-        return random_centroid_arr
-
-    def _calculate_dist_centroid(self, mat: np.ndarray, random_centroid_arr: np.ndarray):
-
-        # Calculate the Euclidean distance between the random centroid and the rest of the points
-        dist = cdist(random_centroid_arr, mat, 'euclidean')
-
-        return dist
-
-    def _generate_random_centroid(self, mat: np.ndarray, dist: np.ndarray):
-
-        # Square the distances between the random centroid and the rest of the points
-        square_dist = np.square(dist)
-
-        # Sum the squared the distances
-        sum_dist = np.sum(square_dist)
-
-        # Divide each element in the squared distances array by the sum of all the squared distances
-        prob_dist = square_dist / sum_dist
-
-        # Calculate the cumulative probability
-        cumprobs = prob_dist.cumsum()
-
-        # Choose a random number r
-        r = np.random.random()
-
-        # Find the first set of coordinates
-        index = np.where(cumprobs >= r)[0][0]
-
-        # Returns index of new center
+    def _choose_next_center(self, mat: np.ndarray):
+        self.probs = self.dist_squared / self.dist_squared.sum()
+        self.cumulative_probs = self.probs.cumsum()
+        r = np.random.uniform(low=0.0, high=1.0)
+        index = np.where(self.cumulative_probs >= r)[0][0]
         return mat[index]
+    def generate_k_centroids(self, mat: np.ndarray):
+        while len(self.centroids) < self.k:
+            self._distance_from_centroids(mat)
+            self.centroids.append(self._choose_next_center(mat))
+        self.centroids = np.array(self.centroids)
 
 
+    # need to

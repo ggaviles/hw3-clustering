@@ -34,7 +34,7 @@ def make_clusters(
     assert k <= n
 
     labels = np.sort(np.random.randint(0, k, size=n))
-    centers = np.random.uniform(bounds[0], bounds[1], size=(k,m))
+    centers = np.random.uniform(bounds[0], bounds[1], size=(k, m))
     mat = np.vstack([
         np.random.normal(
             loc=centers[idx], 
