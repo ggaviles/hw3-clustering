@@ -2,7 +2,7 @@ import random
 
 import numpy as np
 from scipy.spatial.distance import cdist
-from scipy.stats import rv_discrete
+from collections import defaultdict
 
 
 class KMeans:
@@ -72,22 +72,19 @@ class KMeans:
             mat: np.ndarray
                 A 2D matrix where the rows are observations and columns are features
         """
-        self._init_centroids(mat)
+        self._generate_init_centroid(mat)
 
-        self.classifications = {}
+        self._generate_k_centroids(mat)
 
-        max_iter_counter = 0
+        curr_error = self._determine_error(mat)
 
-        while max_iter_counter < self.max_iter:
 
-            while len(self.centroids) < self.k:
-                self._distance_from_centroids(mat)
-                self.centroids.append(self._choose_next_center(mat))
+        #max_iter_counter = 1
 
-            for i in range(self.k):
-                self.classifications[i] = []
-
-            for features in mat:
+        # max_iter - 1 because already went through one iteration
+        for i in range(self.max_iter-1):
+            while error
+                self._update_centroids(mat)
 
 
 
@@ -117,9 +114,37 @@ class KMeans:
         except TypeError:
             print('Incorrect number of dimensions:' + mat.ndim)
 
-        distances = [np.linalg.norm(mat - self.centroids[centroid]) for centroid in self.centroids]
-        classification = distances.index(min(distances))
-        return classification
+        # I created a dictionary assigning each point to the centroid for which error is minimum
+        from collections import defaultdict
+        assignment_dict = defaultdict(list)
+
+        for index, val in enumerate(error):
+            min_dist_index = np.argmin(error[index])
+            assignment_dict[min_dist_index].append(mat[index])
+
+        for i in range(self.max_iter):
+
+            # Generate k centroids
+            self._generate_k_centroids(mat)
+
+            # Calculate the distances between k centroids and each element in mat
+            dist = self.distance_from_centroids(mat)
+
+            # Assign centroids to their closest data points (placed into dictionary)
+            classification = self._assign_cluster(mat)
+
+            # Generate array of error values
+            error_array = self._determine_error(mat)
+
+            #
+
+            while error > self.tol:
+
+
+
+
+
+
 
     def get_error(self) -> float:
         """
@@ -148,9 +173,20 @@ class KMeans:
         initial_index = np.random.choice(range(mat.shape[0]), )
         self.centroids.append(mat[initial_index, :].tolist())
 
+    def distance_from_centroids(self, mat: np.ndarray):
+        centroids = self.centroids
+        dist = cdist(mat, np.array(self.centroids))
+
+        # Already calculating (minimum) distance between points in mat and closest centroid
+        dist_squared = np.array([min([np.linalg.norm(m-c)**2 for c in centroids]) for m in mat])
+        self.dist_squared = dist_squared
+        return self.dist_squared
+
     def _distance_from_centroids(self, mat: np.ndarray):
         centroids = self.centroids
         dist = cdist(mat, np.array(self.centroids))
+
+        # Already calculating (minimum) distance between points in mat and closest centroid
         dist_squared = np.array([min([np.linalg.norm(m-c)**2 for c in centroids]) for m in mat])
         self.dist_squared = dist_squared
 
@@ -161,15 +197,47 @@ class KMeans:
         index = np.where(self.cumulative_probs >= r)[0][0]
         return mat[index]
 
-    def generate_k_centroids(self, mat: np.ndarray):
+    def _generate_k_centroids(self, mat: np.ndarray):
+        self._generate_init_centroid(mat)
         while len(self.centroids) < self.k:
             self._distance_from_centroids(mat)
             self.centroids.append(self._choose_next_centroid(mat))
         self.centroids = np.array(self.centroids)
-    def _determine_error(self, mat: np.ndarray):
+
+    def _determine_error(self, mat: np.ndarray) -> np.ndarray:
         centroids = self.get_centroids()
         sum_of_squares_error = np.array([np.square([np.sum((m-c)**2) for c in centroids]) for m in mat])
         return sum_of_squares_error
 
+    def _assign_cluster(self, mat: np.ndarray) -> defaultdict:
 
-    # need to
+        # I created a dictionary assigning each point to the centroid for which error is minimum
+        assignment_dict = defaultdict(list)
+
+        error = self._determine_error(mat)
+
+        for index, val in enumerate(error):
+            min_dist_index = np.argmin(error[index])
+            assignment_dict[min_dist_index].append(mat[index])
+
+        return assignment_dict
+
+    def _update_centroids(self, mat: np.ndarray):
+        class_dict = self._assign_cluster(mat)
+
+        mean_dict = defaultdict(list)
+
+        for i in class_dict.keys():
+            dict_values = list(class_dict.values())
+            dict_values_curr = dict_values[i]
+            dict_val_mean = map(np.mean, zip(*dict_values_curr))
+            dict_val_mean = list(dict_val_mean)
+            mean_dict[i].append(dict_val_mean)
+
+        # Reset self.centroids to be empty
+        self.centroids = []
+        while len(self.centroids) < self.k:
+            for key, value in mean_dict.items():
+                index = key
+                self.centroids.insert(index, value)
+        self.centroids = np.array(self.centroids)
