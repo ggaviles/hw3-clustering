@@ -120,12 +120,21 @@ class KMeans:
         except TypeError:
             print('Incorrect number of dimensions:' + mat.ndim)
 
-        new_assign = self._assign_cluster(mat)
+        # Running self._assign_cluster(mat) would return a dictionary with keys as labels, values as data points
+        #self._assign_cluster(mat)
 
+        """
+        Code below plots points colored by their label:
+        
         for key, data_list in new_assign.items():
             key, values = zip(*data_list)  # Unpack
             plt.scatter(key, values, label=key)
         plt.show()
+        """
+
+        cluster_labels =  self._return_matrix_of_labels(mat)
+
+        return cluster_labels
 
     def get_error(self) -> float:
         """
@@ -255,3 +264,13 @@ class KMeans:
         sum_errors_dict = {k: [sum(error_dict[k])] for k in error_dict.keys()}
 
         return sum_errors_dict
+
+    def _return_matrix_of_labels(self, mat: np.ndarray) -> np.ndarray:
+        labels = []
+        error = self._determine_error(mat)
+        for index, val in enumerate(error):
+            min_dist_index = np.argmin(error[index])
+            labels.append(min_dist_index)
+        labels = np.array(labels)
+
+        return labels
