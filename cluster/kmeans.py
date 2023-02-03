@@ -172,37 +172,35 @@ class KMeans:
         return self.centroids
 
     def _generate_init_centroid(self, mat: np.ndarray):
-        self.centroids = []
-        initial_index = np.random.choice(range(mat.shape[0]), )
-        self.centroids.append(mat[initial_index, :].tolist())
+        self.centroids = []  # Set self.centroids variable to be an empty list
+        initial_index = np.random.choice(range(mat.shape[0]), )  # Choose a random index in the range of the dataset
+        self.centroids.append(mat[initial_index, :].tolist())  # Find data point by its index and add to centroids list
 
     def distance_from_centroids(self, mat: np.ndarray):
         centroids = self.centroids
-        dist = cdist(mat, np.array(self.centroids))
-
-        # Already calculating (minimum) distance between points in mat and closest centroid
+        # Calculate squared minimum distance between points in mat and centroids to find distance to closest centroid
         dist_squared = np.array([min([np.linalg.norm(m-c)**2 for c in centroids]) for m in mat])
-        self.dist_squared = dist_squared
+        self.dist_squared = dist_squared  # Update self.dist_squared variable
         return self.dist_squared
 
     def _distance_from_centroids(self, mat: np.ndarray):
         centroids = self.centroids
-        dist = cdist(mat, np.array(self.centroids))
-
-        # Already calculating (minimum) distance between points in mat and closest centroid
+        # Calculate squared minimum distance between points in mat and closest centroid
         dist_squared = np.array([min([np.linalg.norm(m-c)**2 for c in centroids]) for m in mat])
-        self.dist_squared = dist_squared
+        self.dist_squared = dist_squared  # Update self.dist_squared variable
 
     def _choose_next_centroid(self, mat: np.ndarray):
+        # Divide squared distances by sum of squared distances to get a probability distribution
         self.probs = self.dist_squared / self.dist_squared.sum()
-        self.cumulative_probs = self.probs.cumsum()
-        r = np.random.uniform(low=0.0, high=1.0)
+        self.cumulative_probs = self.probs.cumsum()  # Calculate the cumulative sum of the probability distribution
+        r = np.random.uniform(low=0.0, high=1.0)  # Choose a uniform random number between 0.0 and 1.0
+        # Choose an index for which the cumulative probability is greater than the random number generated
         index = np.where(self.cumulative_probs >= r)[0][0]
-        return mat[index]
+        return mat[index]  #
 
     def _generate_k_centroids(self, mat: np.ndarray):
-        self._generate_init_centroid(mat)
-        while len(self.centroids) < self.k:
+        self._generate_init_centroid(mat)  # Call method to create random initial centroid
+        while len(self.centroids) < self.k:  # Generate k number of centroids
             self._distance_from_centroids(mat)
             self.centroids.append(self._choose_next_centroid(mat))
         self.centroids = np.array(self.centroids)
@@ -214,16 +212,13 @@ class KMeans:
 
     def _assign_cluster(self, mat: np.ndarray) -> defaultdict:
 
-        # I created a dictionary assigning each point to the centroid for which error is minimum
+        # Create dictionary assigning each point to the centroid for which error is minimum
         assignment_dict = defaultdict(list)
-
         error = self._determine_error(mat)
-
         for index, val in enumerate(error):
             min_dist_index = np.argmin(error[index])
             assignment_dict[min_dist_index].append(mat[index])
-
-        return assignment_dict
+        return assignment_dict  # Return a dictionary with cluster assignments as keys, corresponding points as values
 
     def _update_centroids(self, mat: np.ndarray):
         # Creates a dictionary in which keys are centroids and values are the data points assigned to them
@@ -285,5 +280,4 @@ class KMeans:
             min_dist_index = np.argmin(error[index])
             labels.append(min_dist_index)
         labels = np.array(labels)
-
         return labels

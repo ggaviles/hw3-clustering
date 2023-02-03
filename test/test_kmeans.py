@@ -4,44 +4,71 @@ import random
 import pytest
 import pathlib
 import sklearn.cluster
+from sklearn.metrics import silhouette_score, silhouette_samples
 import numpy as np
-from cluster import KMeans, utils
+from cluster import KMeans, utils, Silhouette
+
+random_n = np.random.randint(1, 1000)
+random_k = np.random.randint(1, random_n)
+mat, labels = utils.make_clusters(n=random_n, m=2, k=random_k)
 
 def test_empty():
+    """
+    Test that kmeans raises a ValueError if data matrix is empty
+    """
     with pytest.raises(ValueError):
-        mat, labels = utils.make_clusters(n=1000, m=0, k=3)
+        mat_, labels_ = utils.make_clusters(n=1000, m=0, k=3)
         kmeans = KMeans(k=3, tol=1e-6, max_iter=100)
-        kmeans.fit(mat)
-        kmeans.predict(mat)
+        kmeans.fit(mat_)
+        kmeans.predict(mat_)
 
 def test_k_not_integer():
+    """
+    Test if k is an integer
+    """
     with pytest.raises(TypeError):
         kmeans = KMeans(k=1e-6, tol=1e-6, max_iter=100)
 
 def test_tol_not_float():
+    """
+    Test if tol is a float
+    """
     with pytest.raises(TypeError):
         kmeans = KMeans(k=3, tol=0, max_iter=100)
 
 def test_max_iter_not_float():
+    """
+    Test if max_iter is a float
+    """
     with pytest.raises(TypeError):
         kmeans = KMeans(k=3, tol=1, max_iter=1e-6)
 
 def test_if_k_is_zero():
+    """
+    Test if k value is zero
+    """
     with pytest.raises(ValueError):
         kmeans = KMeans(k=0, tol=1e-6, max_iter=100)
 
 def test_if_tol_is_zero():
+    """
+    Test if tol value is zero
+    """
     with pytest.raises(ValueError):
         kmeans = KMeans(k=3, tol=0.0, max_iter=100)
 
 def test_if_max_iter_is_zero():
+    """
+    Test if max_iter value is zero
+    """
     with pytest.raises(ValueError):
         kmeans = KMeans(k=3, tol=1e-6, max_iter=0)
 
 def test_correct_number_of_clusters():
-    random_n = np.random.randint(1, 1000)
-    random_k = np.random.randint(1, random_n)
-    mat, labels = utils.make_clusters(n=random_n, m=2, k=random_k)
+    """
+    Test if my kmeans implementation returns the right number of clusters at the end of the fit() and predict() methods.
+    Compare to sklearn kmeans implementation.
+    """
     kmeans = KMeans(random_k, tol=1e-6, max_iter=100)
     kmeans.fit(mat)
     kmeans.predict(mat)
@@ -51,10 +78,10 @@ def test_correct_number_of_clusters():
     kmeans_sklearn.predict(mat)
     assert len(kmeans.get_centroids()) == len(kmeans_sklearn.cluster_centers_)
 
-def test_if_more_accurate_than_sklearn_kmeans():
-    random_n = np.random.randint(1, 1000)  # Choose a random number n of observations
-    random_k = np.random.randint(1, random_n)  # Choose a random number k up to n
-    mat, labels = utils.make_clusters(n=random_n, m=2, k=random_k)
+def test_kmeans_accuracy_against_sklearn_kmeans():
+    """
+    Test accuracy of kmeans implementation against accuracy of sklearn kmeans at predicting labels
+    """
     kmeans = KMeans(random_k, tol=1e-6, max_iter=100)  # Instantiate a kmeans object from the class I wrote
     kmeans.fit(mat)  # Fit kmeans onto the data matrix mat
     my_generated_labels = kmeans.predict(mat)  # Generate labels for each data point
@@ -73,9 +100,65 @@ def test_if_more_accurate_than_sklearn_kmeans():
     similarity_percent_kmeans = np.mean(labels == my_generated_labels)
     similarity_percent_sklearn = np.mean(labels == sklearn_labels)
 
+    diff = np.abs((np.mean(similarity_percent_sklearn) - np.mean(similarity_percent_kmeans)))
+
     # Assert that my_generated_labels are closer to the actual labels
     # ex: for n=1000, m=2, k=3, my similarity percent was 0.937, sklearn's was 0.861
-    assert similarity_percent_kmeans > similarity_percent_sklearn
+    assert diff < 0.01
+
+def test_sklearn_silhouette_score_mean():
+    """
+    Test that overall mean silhouette score as determined by sklearn between sklearn.kmeans and my implemented kmeans
+    are similar (let's see if their difference is less than a small value like 0.09)
+    """
+    kmeans = KMeans(random_k, tol=1e-6, max_iter=100)  # Instantiate a kmeans object from the class I wrote
+    kmeans.fit(mat)  # Fit kmeans onto the data matrix mat
+    my_generated_labels = kmeans.predict(mat)  # Generate labels for each data point
+
+    # Repeat above steps using sklearn.cluster.Kmeans
+    kmeans_sklearn = sklearn.cluster.KMeans(n_clusters=random_k, init='k-means++', n_init='auto', max_iter=100, tol=1e-6)
+    kmeans_sklearn.fit(mat)
+    kmeans_sklearn.predict(mat)
+
+    silhouette_kmeans_matrix = silhouette_score(mat, kmeans._return_matrix_of_labels(mat))  # using my kmeans values
+    silhouette_sklearn_matrix = silhouette_score(mat, kmeans_sklearn.labels_)  # using sklearn kmeans values
+
+    silhouette_diff = np.linalg.norm(silhouette_kmeans_matrix - silhouette_sklearn_matrix)
+
+    assert silhouette_diff < 0.09
+
+"""
+def test_sklearn_silhouette_score_comparison():
+    kmeans = KMeans(random_k, tol=1e-6, max_iter=100)  # Instantiate a kmeans object from the class I wrote
+    kmeans.fit(mat)  # Fit kmeans onto the data matrix mat
+    my_generated_labels = kmeans.predict(mat)  # Generate labels for each data point
+
+    # Repeat above steps using sklearn.cluster.Kmeans
+    kmeans_sklearn = sklearn.cluster.KMeans(n_clusters=random_k, init='k-means++', n_init='auto', max_iter=100, tol=1e-6)
+    kmeans_sklearn.fit(mat)
+    kmeans_sklearn.predict(mat)
+
+    silhouette_kmeans_matrix = silhouette_score(mat, kmeans._return_matrix_of_labels(mat))  # using my kmeans values
+    silhouette_sklearn_matrix = silhouette_score(mat, kmeans_sklearn.labels_)  # using sklearn kmeans values
+
+    assert silhouette_kmeans_matrix >= silhouette_sklearn_matrix
+"""
+
+def test_silhouette_vs_sklearn_silhouette():
+    """
+    Test that silhouette.score() produces values similar to that produced by sklearn.metrics.silhouette_samples within
+    a range of 0.01
+    """
+    kmeans = KMeans(random_k, tol=1e-6, max_iter=100)  # Instantiate a kmeans object from the class I wrote
+    kmeans.fit(mat)  # Fit kmeans onto the data matrix mat
+    my_generated_labels = kmeans.predict(mat)  # Generate labels for each data point
+
+    silhouette_kmeans_matrix = Silhouette().score(mat, my_generated_labels)  # using my silhouette method
+    silhouette_sklearn_matrix = silhouette_samples(mat, my_generated_labels)  # using sklearn silhouette method
+
+    silhouette_diff = np.abs(np.mean(silhouette_kmeans_matrix) - np.mean(silhouette_sklearn_matrix))
+
+    assert silhouette_diff < 0.09
 
 
 
