@@ -9,6 +9,7 @@ from .utils import (
         make_clusters, 
         plot_clusters,
         plot_multipanel)
+import sklearn.cluster
 
 __version__ = "0.1.0"
 __author__ = "Giovanni Aviles"

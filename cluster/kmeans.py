@@ -30,24 +30,34 @@ class KMeans:
         """
 
         # Check that k is an integer
-        try:
-            val = int(k)
-        except ValueError:
-            print("Input k value is not an integer. Re-enter a k with integer value.")
+        if k != int(k):
+            raise TypeError("Input k value is not an integer. Re-enter a k with integer value.")
 
         # Check that minimum error tolerance is a float value
-        try:
-            val = float(tol)
-        except ValueError:
-            print("Input minimum error tolerance value is not a float. "
+        if type(tol) is not float:
+            raise TypeError("Input minimum error tolerance value is not a float. "
                   "Re-enter a minimum error tolerance with float value.")
 
         # Check that max_iter value is an integer
-        try:
-            val = int(max_iter)
-        except ValueError:
-            print("Input maximum iteration value is not an integer. "
+        if max_iter != int(max_iter):
+            raise TypeError("Input maximum iteration value is not an integer. "
                   "Re-enter a maximum iteration input with integer value.")
+
+        """
+        Check input parameters are greater than zero.
+        """
+
+        # Check that k is not zero
+        if k == 0:
+            raise ValueError("There must be at least one cluster. Set k integer value greater than 0.")
+
+        # Check that tol is not zero
+        if tol == 0.0:
+            raise ValueError("Tolerance value should be set low but greater than zero. Set tol float value greater than 0.")
+
+        # Check that max_iter is not zero
+        if max_iter == 0:
+            raise ValueError("There must be at least one iteration. Set max_iter integer value greater than 0.")
 
         """
         Initialize attributes
@@ -57,6 +67,7 @@ class KMeans:
         self.max_iter = max_iter
 
         self.centroids = None
+        self.mean_squared_error = None
 
     def fit(self, mat: np.ndarray):
         """
@@ -73,6 +84,9 @@ class KMeans:
             mat: np.ndarray
                 A 2D matrix where the rows are observations and columns are features
         """
+        if mat.size == 0:
+            raise ValueError("Array is empty. Enter a 2D matrix with elements.")
+
         # Create an initial centroid
         self._generate_init_centroid(mat)
 
@@ -96,8 +110,8 @@ class KMeans:
                 if float(values) > self.tol:
                     self._update_centroids(mat)
                 else:
+                    self.mean_squared_error = float(sum(error_diff_dict.values())) / float(len(error_diff_dict.values()))
                     break
-
 
     def predict(self, mat: np.ndarray) -> np.ndarray:
         """
@@ -121,7 +135,7 @@ class KMeans:
             print('Incorrect number of dimensions:' + mat.ndim)
 
         # Running self._assign_cluster(mat) would return a dictionary with keys as labels, values as data points
-        #self._assign_cluster(mat)
+        # new_assign = self._assign_cluster(mat)
 
         """
         Code below plots points colored by their label:
@@ -132,7 +146,7 @@ class KMeans:
         plt.show()
         """
 
-        cluster_labels =  self._return_matrix_of_labels(mat)
+        cluster_labels = self._return_matrix_of_labels(mat)
 
         return cluster_labels
 
@@ -145,8 +159,7 @@ class KMeans:
             float
                 the squared-mean error of the fit model
         """
-
-
+        return self.mean_squared_error
 
     def get_centroids(self) -> np.ndarray:
         """

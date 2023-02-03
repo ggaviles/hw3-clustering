@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial.distance import cdist
 
-import cluster
+from cluster import KMeans
 
 
 class Silhouette:
@@ -31,7 +31,7 @@ class Silhouette:
         try:
             x.ndim == 2
         except TypeError:
-            print('Incorrect number of dimensions:' + X.ndim)
+            print('Incorrect number of dimensions:' + x.ndim)
 
         # Check if Y is in the right format
         try:
@@ -39,6 +39,7 @@ class Silhouette:
         except TypeError:
             print('Incorrect number of dimensions:' + y.ndim)
 
+        KMeans.distance_from_centroids()
 
 
 
