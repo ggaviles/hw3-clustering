@@ -3,6 +3,7 @@ import random
 import numpy as np
 from scipy.spatial.distance import cdist
 from collections import defaultdict
+from matplotlib import pyplot as plt
 
 
 class KMeans:
@@ -72,20 +73,30 @@ class KMeans:
             mat: np.ndarray
                 A 2D matrix where the rows are observations and columns are features
         """
+        # Create an initial centroid
         self._generate_init_centroid(mat)
 
+        # Generate k centroids
         self._generate_k_centroids(mat)
 
-        error_diff = self._determine_error(mat)
+        # Calculate the sum of squares error for this first set of k centroids
+        prev_error = self._generate_error_per_centroid(mat)
+
+        # No other error here so set error_diff to prev_error
+        curr_error = prev_error
+
+        error_diff_dict = {}
+
+        for key in curr_error:
+            error_diff_dict[key] = np.absolute((prev_error[key])[0] - (curr_error[key])[0])
 
         # max_iter - 1 because already went through one iteration
         for i in range(self.max_iter-1):
-            while error_diff > self.tol:
-                self._update_centroids(mat)
-                curr_error = self._determine_error(mat)
-                error_diff = curr_error - prev_error
-                error_diff = np.abs(error_diff)
-                prev_error = curr_error
+            for values in error_diff_dict.values():
+                if float(values) > self.tol:
+                    self._update_centroids(mat)
+                else:
+                    break
 
 
     def predict(self, mat: np.ndarray) -> np.ndarray:
@@ -109,35 +120,12 @@ class KMeans:
         except TypeError:
             print('Incorrect number of dimensions:' + mat.ndim)
 
-        # I created a dictionary assigning each point to the centroid for which error is minimum
-        from collections import defaultdict
-        assignment_dict = defaultdict(list)
+        new_assign = self._assign_cluster(mat)
 
-        for index, val in enumerate(error):
-            min_dist_index = np.argmin(error[index])
-            assignment_dict[min_dist_index].append(mat[index])
-
-        for i in range(self.max_iter):
-
-            # Generate k centroids
-            self._generate_k_centroids(mat)
-
-            # Calculate the distances between k centroids and each element in mat
-            dist = self.distance_from_centroids(mat)
-
-            # Assign centroids to their closest data points (placed into dictionary)
-            classification = self._assign_cluster(mat)
-
-            # Generate array of error values
-            error_array = self._determine_error(mat)
-
-            #
-
-
-
-
-
-
+        for key, data_list in new_assign.items():
+            key, values = zip(*data_list)  # Unpack
+            plt.scatter(key, values, label=key)
+        plt.show()
 
     def get_error(self) -> float:
         """
@@ -216,21 +204,54 @@ class KMeans:
         return assignment_dict
 
     def _update_centroids(self, mat: np.ndarray):
+        # Creates a dictionary in which keys are centroids and values are the data points assigned to them
         class_dict = self._assign_cluster(mat)
 
+        # Initialize a dictionary with mean coordinates for each cluster center
         mean_dict = defaultdict(list)
 
+        # Iterate through the k keys
         for i in class_dict.keys():
+            # Pass the values of class_dict into a list and assign to dict_values
             dict_values = list(class_dict.values())
+
+            # Select the values corresponding to the ith key
             dict_values_curr = dict_values[i]
+
+            # Take the mean of all the n observations and m features across each data point in a particular cluster
             dict_val_mean = map(np.mean, zip(*dict_values_curr))
+
+            # Make dict_val_mean a list
             dict_val_mean = list(dict_val_mean)
+
+            # Append mean_dict with the mean associated with the m and n values
             mean_dict[i].append(dict_val_mean)
 
         # Reset self.centroids to be empty
         self.centroids = []
+
+        # Loop through the number of centroids until you have added k centroids
         while len(self.centroids) < self.k:
+
+            # Iterate through mean_dict
             for key, value in mean_dict.items():
+                # Assign the k key values to be indices for the self.centroids array
                 index = key
+                # Insert the associated mean values to a specific index
                 self.centroids.insert(index, value)
-        self.centroids = np.array(self.centroids)
+
+        # Reshape self.centroids array to be m x n dimensions
+        self.centroids = np.squeeze(np.array(self.centroids), axis=(1,))
+
+    def _generate_error_per_centroid(self, mat: np.ndarray):
+        # Returns dictionary of summed errors per cluster
+        error_dict = defaultdict(list)
+        error = self._determine_error(mat)
+        for index, val in enumerate(error):
+            min_dist_index = np.argmin(error[index])
+            error_dict[min_dist_index].append(val[min_dist_index])
+
+        # Calculate error of all assigned points in a particular cluster
+        sum_errors_dict = {k: [sum(error_dict[k])] for k in error_dict.keys()}
+
+        return sum_errors_dict
