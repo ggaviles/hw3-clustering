@@ -19,7 +19,7 @@ jobs:
       - name: Set up Python 3.7
         uses: actions/setup-python@v1
         with:
-          python-version: 3.7
+          python-version: 3.7s
 
       - name: Install package
         run: |
@@ -32,4 +32,4 @@ jobs:
           pip install matplotlib
       - name: Test with pytest
         run: |
-          python -m pytest -vv tests/*py
+          python -m pytest -vv ./tests/*py
