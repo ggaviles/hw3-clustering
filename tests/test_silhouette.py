@@ -2,7 +2,7 @@
 import random
 import pytest
 import sklearn
-import sklearn.cluster
+from sklearn.cluster import KMeans as KMeans_sklearn
 from sklearn.metrics import silhouette_score, silhouette_samples
 import numpy as np
 from cluster import KMeans, utils, Silhouette
@@ -21,7 +21,7 @@ def test_sklearn_silhouette_score_mean():
     my_generated_labels = kmeans.predict(mat)  # Generate labels for each data point
 
     # Repeat above steps using sklearn.cluster.Kmeans
-    kmeans_sklearn = sklearn.cluster.KMeans(n_clusters=random_k, init='k-means++', n_init='auto', max_iter=100, tol=1e-6)
+    kmeans_sklearn = KMeans_sklearn(n_clusters=random_k, n_init='auto', max_iter=100, tol=1e-6)
     kmeans_sklearn.fit(mat)
     kmeans_sklearn.predict(mat)
 
