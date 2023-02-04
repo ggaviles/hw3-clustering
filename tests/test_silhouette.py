@@ -25,7 +25,7 @@ def test_sklearn_silhouette_score_mean():
     kmeans_sklearn.fit(mat)
     kmeans_sklearn.predict(mat)
 
-    silhouette_kmeans_matrix = silhouette_score(mat, kmeans._return_matrix_of_labels(mat))  # using my kmeans values
+    silhouette_kmeans_matrix = silhouette_score(mat, my_generated_labels)  # using my kmeans values
     silhouette_sklearn_matrix = silhouette_score(mat, kmeans_sklearn.labels_)  # using sklearn kmeans values
 
     silhouette_mean_diff = np.linalg.norm(silhouette_kmeans_matrix - silhouette_sklearn_matrix)
