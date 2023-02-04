@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          repository: ggaviles/hw3-clustering
 
       - name: Set up Python 3.7
         uses: actions/setup-python@v1
@@ -30,6 +32,9 @@ jobs:
       - name: Install matplotlib
         run: |
           pip install matplotlib
+      - name: Install pytest
+        run: |
+          pip install pytest
       - name: Test with pytest
         run: |
-          python -m pytest -vv ./tests/*py
+          python -m pytest -vv tests/*py
