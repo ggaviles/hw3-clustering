@@ -10,6 +10,7 @@ from .utils import (
         plot_clusters,
         plot_multipanel)
 import sklearn.cluster
+from sklearn.cluster import KMeans as KMeans_sklearn
 
 __version__ = "0.1.0"
 __author__ = "Giovanni Aviles"
