@@ -28,6 +28,9 @@ jobs:
       - name: Install numpy
         run: |
           pip install numpy
+      - name: Install sklearn
+        run: |
+          pip install sklearn
       - name: Install matplotlib
         run: |
           pip install matplotlib
