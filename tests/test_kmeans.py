@@ -1,9 +1,7 @@
 # Write your k-means unit tests here
 import random
 import pytest
-import sklearn
 from sklearn.cluster import KMeans as KMeans_sklearn
-from sklearn.metrics import silhouette_score, silhouette_samples
 import numpy as np
 from cluster import KMeans, utils, Silhouette
 
