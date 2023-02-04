@@ -70,7 +70,7 @@ def test_correct_number_of_clusters():
     kmeans.fit(mat)
     kmeans.predict(mat)
 
-    kmeans_sklearn = KMeans_sklearn(n_clusters=random_k, n_init='auto', max_iter=100, tol=1e-6)
+    kmeans_sklearn = KMeans_sklearn(n_clusters=random_k, max_iter=100, tol=1e-6)
     kmeans_sklearn.fit(mat)
     kmeans_sklearn.predict(mat)
     assert len(kmeans.get_centroids()) == len(kmeans_sklearn.cluster_centers_)
@@ -84,7 +84,7 @@ def test_kmeans_accuracy_against_sklearn_kmeans():
     my_generated_labels = kmeans.predict(mat)  # Generate labels for each data point
 
     # Repeat above steps using sklearn.cluster.Kmeans
-    kmeans_sklearn = KMeans_sklearn(n_clusters=random_k, n_init='auto', max_iter=100, tol=1e-6)
+    kmeans_sklearn = KMeans_sklearn(n_clusters=random_k, max_iter=100, tol=1e-6)
     kmeans_sklearn.fit(mat)
     kmeans_sklearn.predict(mat)
 
