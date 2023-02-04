@@ -2,7 +2,7 @@
 # write tests for bfs
 import random
 import pytest
-import pathlib
+import sklearn
 import sklearn.cluster
 from sklearn.metrics import silhouette_score, silhouette_samples
 import numpy as np
